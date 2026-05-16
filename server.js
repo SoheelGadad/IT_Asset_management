@@ -175,7 +175,7 @@ const startServer = async () => {
     await mongoose.connect(process.env.MONGODB_URI);
     console.log("✅ MongoDB Atlas Connected Successfully");
 
-    const PORT = process.env.PORT || 5001; 
+    const PORT = process.env.PORT || 8000; 
     
     // ✅ FIXED: Removed "0.0.0.0" so Azure Windows can safely use named pipes
     app.listen(PORT, () => {
