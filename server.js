@@ -176,8 +176,10 @@ const startServer = async () => {
     console.log("✅ MongoDB Atlas Connected Successfully");
 
     const PORT = process.env.PORT || 5001; 
-    app.listen(PORT, "0.0.0.0", () => {
-      console.log(`🚀 Server running on port ${PORT}`);
+    
+    // ✅ FIXED: Removed "0.0.0.0" so Azure Windows can safely use named pipes
+    app.listen(PORT, () => {
+      console.log(`🚀 Server running on port/pipe: ${PORT}`);
     });
 
   } catch (error) {
