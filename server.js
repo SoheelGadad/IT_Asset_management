@@ -156,11 +156,11 @@ app.put('/api/requests/:id/reject', verifyToken, verifyAdmin, async (req, res) =
  * 🌐 STATIC FILE SERVING FOR PRODUCTION
  */
 // 1. Serve the compiled static assets (js, css, images) from the frontend build folder
-app.use(express.static(path.join(__dirname, "./frontend/dist")));
+app.use(express.static(path.join(__dirname, "./frontend")));
 
 // 2. Catch-all route to serve index.html for your SPA client-side routing
 app.get("*", (req, res) => {
-    res.sendFile(path.join(__dirname, "./frontend/dist/index.html"));
+    res.sendFile(path.join(__dirname, "./frontend/index.html"));
 });
 /**
  * 🏁 SERVER STARTUP
