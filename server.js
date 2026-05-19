@@ -155,13 +155,22 @@ app.put('/api/requests/:id/reject', verifyToken, verifyAdmin, async (req, res) =
 /**
  * 🌐 STATIC FILE SERVING FOR PRODUCTION
  */
-// 1. Serve the compiled static assets (js, css, images) from the frontend build folder
-app.use(express.static(path.join(__dirname, "./frontend/dist")));
+// ✅ FIXED: Use path.resolve for unbreakable Windows absolute paths
+const frontendDistPath = path.resolve(__dirname, "frontend", "dist");
+
+// 1. Serve the compiled static assets natively
+app.use(express.static(frontendDistPath));
 
 // 2. Catch-all route to serve index.html for your SPA client-side routing
 app.get("*", (req, res) => {
-    res.sendFile(path.join(__dirname, "./frontend/dist/index.html"));
+    // 🛡️ Guardrail: Stop 500 errors if an old cached JS file is requested
+    if (req.url.startsWith('/assets/')) {
+        return res.status(404).send("Requested asset file does not exist.");
+    }
+    
+    res.sendFile(path.resolve(frontendDistPath, "index.html"));
 });
+
 /**
  * 🏁 SERVER STARTUP
  */
