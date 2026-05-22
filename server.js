@@ -2,7 +2,7 @@ const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
-const path = require("path"); // ✅ FIXED: Added missing path module
+const path = require("path");
 require("dotenv").config();
 
 const app = express();
@@ -71,7 +71,7 @@ app.post('/api/requests', verifyToken, async (req, res) => {
         const { assetId, model, assetType, serialNo, location } = req.body;
 
         const newRequest = new Request({
-            userId: req.userId, // Taken from the verified token
+            userId: req.userId, 
             assetId, 
             model,
             assetType,
@@ -153,9 +153,9 @@ app.put('/api/requests/:id/reject', verifyToken, verifyAdmin, async (req, res) =
 });
 
 /**
- * 🌐 STATIC FILE SERVING FOR PRODUCTION
+ * 🌐 STATIC FILE SERVING FOR PRODUCTION (React/Vite)
  */
-// ✅ FIXED: Use path.resolve for unbreakable Windows absolute paths
+// Use path.resolve for unbreakable Windows/Linux absolute paths
 const frontendDistPath = path.resolve(__dirname, "frontend", "dist");
 
 // 1. Serve the compiled static assets natively
@@ -163,7 +163,7 @@ app.use(express.static(frontendDistPath));
 
 // 2. Catch-all route to serve index.html for your SPA client-side routing
 app.get("*", (req, res) => {
-    // 🛡️ Guardrail: Stop 500 errors if an old cached JS file is requested
+    // Guardrail: Stop 500 errors if an old cached JS file is requested
     if (req.url.startsWith('/assets/')) {
         return res.status(404).send("Requested asset file does not exist.");
     }
@@ -177,16 +177,16 @@ app.get("*", (req, res) => {
 const startServer = async () => {
   try {
     if (!process.env.MONGODB_URI) {
-      console.error("❌ MONGODB_URI missing in .env");
+      console.error("❌ MONGODB_URI missing in environment variables.");
       process.exit(1); 
     }
 
     await mongoose.connect(process.env.MONGODB_URI);
     console.log("✅ MongoDB Atlas Connected Successfully");
 
+    // Let Azure assign the port dynamically, fallback to 8000 locally
     const PORT = process.env.PORT || 8000; 
     
-    // ✅ FIXED: Removed "0.0.0.0" so Azure Windows can safely use named pipes
     app.listen(PORT, () => {
       console.log(`🚀 Server running on port/pipe: ${PORT}`);
     });
