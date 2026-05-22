@@ -12,20 +12,11 @@ const app = express();
  */
 app.set("trust proxy", 1); 
 
-const allowedOrigins = [
-  "http://localhost:3000",
-  "http://localhost:5173",
-  "http://localhost:5001", 
-  process.env.FRONTEND_URL  
-];
-
+// CORS configuration for production
 app.use(cors({
   origin: function (origin, callback) {
-    if (!origin) return callback(null, true);
-    if (allowedOrigins.indexOf(origin) === -1) {
-      return callback(new Error('CORS Policy: This origin is not allowed'), false);
-    }
-    return callback(null, true);
+    // Allows your frontend to talk to the backend seamlessly
+    callback(null, true);
   },
   credentials: true, 
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
@@ -52,9 +43,6 @@ const adminRoutes = require("./routes/AdminUsers");
 const assignmentRoutes = require('./routes/assignmentRoutes');
 const employee = require('./routes/employee');
 
-/**
- * 🚀 API ROUTES
- */
 app.use("/api", assetRoutes);
 app.use("/api", authRoute);
 app.use("/api", adminRoutes);
@@ -65,11 +53,9 @@ app.use("/api", employee);
  * 📩 ASSET SELF-SERVICE & AUTOMATION FLOW
  */
 
-// 1. Employee: Submit claim for a new asset (Requires Login)
 app.post('/api/requests', verifyToken, async (req, res) => {
     try {
         const { assetId, model, assetType, serialNo, location } = req.body;
-
         const newRequest = new Request({
             userId: req.userId, 
             assetId, 
@@ -80,15 +66,13 @@ app.post('/api/requests', verifyToken, async (req, res) => {
             assignmentDate: new Date(),
             status: 'pending'
         });
-
         await newRequest.save();
-        res.status(201).json({ message: "Request received. Admin will verify shortly." });
+        res.status(201).json({ message: "Request received." });
     } catch (error) {
         res.status(500).json({ error: "Failed to process request." });
     }
 });
 
-// 2. Admin: Get all pending requests (Requires Admin Login)
 app.get('/api/requests/pending', verifyToken, verifyAdmin, async (req, res) => {
     try {
         const requests = await Request.find({ status: 'pending' });
@@ -98,27 +82,24 @@ app.get('/api/requests/pending', verifyToken, verifyAdmin, async (req, res) => {
     }
 });
 
-// 3. Admin: APPROVE & AUTO-MIGRATE (Requires Admin Login)
 app.put('/api/requests/:id/approve', verifyToken, verifyAdmin, async (req, res) => {
     try {
         const request = await Request.findById(req.params.id);
         if (!request) return res.status(404).json({ error: "Request not found" });
 
-        // Update or Create the Asset in Inventory
         await Asset.findOneAndUpdate(
             { assetId: request.assetId },
             { 
-                assetName: request.model || "New Asset",
+                assetName: request.model || "Assigned Asset",
                 assetType: request.assetType,
                 serialNumber: request.serialNo,
                 location: request.location,
                 assignedUser: request.userId,
                 status: 'Assigned' 
             },
-            { upsert: true, new: true }
+            { upsert: false } 
         );
 
-        // Record the Assignment
         const newAssignment = new Assignment({
             userId: request.userId,
             assetId: request.assetId,
@@ -130,45 +111,41 @@ app.put('/api/requests/:id/approve', verifyToken, verifyAdmin, async (req, res) 
         request.status = 'approved';
         await request.save();
 
-        res.status(200).json({ message: "Approved! Asset inventory and assignment updated." });
+        res.status(200).json({ message: "Approved successfully." });
     } catch (error) {
-        console.error("Approve Error:", error);
         res.status(500).json({ error: "Internal Server Error during approval." });
     }
 });
 
-// 4. Admin: REJECT REQUEST (Requires Admin Login)
 app.put('/api/requests/:id/reject', verifyToken, verifyAdmin, async (req, res) => {
     try {
         const request = await Request.findById(req.params.id);
         if (!request) return res.status(404).json({ error: "Request not found" });
-
         request.status = 'rejected';
         await request.save();
-
-        res.status(200).json({ message: "Request rejected successfully." });
+        res.status(200).json({ message: "Request rejected." });
     } catch (error) {
         res.status(500).json({ error: "Error during rejection." });
     }
 });
 
 /**
- * 🌐 STATIC FILE SERVING FOR PRODUCTION (React/Vite)
+ * 🌐 STATIC FILE SERVING FOR AZURE PRODUCTION
  */
-// Use path.resolve for unbreakable Windows/Linux absolute paths
-const frontendDistPath = path.join(process.env.HOME, "site", "wwwroot", "frontend", "dist");
+// Use process.env.HOME for the absolute Azure Windows path
+const frontendDistPath = path.join(process.env.HOME || __dirname, "site", "wwwroot", "frontend", "dist");
 
-// 1. Serve the compiled static assets natively
+// Serve static files from the build folder
 app.use(express.static(frontendDistPath));
 
-// 2. Catch-all route to serve index.html for your SPA client-side routing
-app.get("*", (req, res) => {
-    // Guardrail: Stop 500 errors if an old cached JS file is requested
-    if (req.url.startsWith('/assets/')) {
-        return res.status(404).send("Requested asset file does not exist.");
+// Catch-all route for SPA client-side routing
+app.get("*", (req, res, next) => {
+    // If request is for an API endpoint, skip to the next handler
+    if (req.url.startsWith('/api/')) {
+        return next();
     }
-    
-    res.sendFile(path.resolve(frontendDistPath, "index.html"));
+    // Otherwise, return index.html
+    res.sendFile(path.join(frontendDistPath, "index.html"));
 });
 
 /**
@@ -177,20 +154,17 @@ app.get("*", (req, res) => {
 const startServer = async () => {
   try {
     if (!process.env.MONGODB_URI) {
-      console.error("❌ MONGODB_URI missing in environment variables.");
+      console.error("❌ MONGODB_URI missing!");
       process.exit(1); 
     }
 
     await mongoose.connect(process.env.MONGODB_URI);
     console.log("✅ MongoDB Atlas Connected Successfully");
 
-    // Let Azure assign the port dynamically, fallback to 8000 locally
     const PORT = process.env.PORT || 8000; 
-    
     app.listen(PORT, () => {
-      console.log(`🚀 Server running on port/pipe: ${PORT}`);
+      console.log(`🚀 Server running on port: ${PORT}`);
     });
-
   } catch (error) {
     console.error("❌ Startup Error:", error.message);
     process.exit(1);
