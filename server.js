@@ -156,7 +156,7 @@ app.put('/api/requests/:id/reject', verifyToken, verifyAdmin, async (req, res) =
  * 🌐 STATIC FILE SERVING FOR PRODUCTION (React/Vite)
  */
 // Use path.resolve for unbreakable Windows/Linux absolute paths
-const frontendDistPath = path.resolve(__dirname, "frontend", "dist");
+const frontendDistPath = path.join(process.env.HOME, "site", "wwwroot", "frontend", "dist");
 
 // 1. Serve the compiled static assets natively
 app.use(express.static(frontendDistPath));
