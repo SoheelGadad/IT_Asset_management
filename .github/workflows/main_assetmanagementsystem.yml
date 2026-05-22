@@ -23,18 +23,20 @@ jobs:
         with:
           node-version: '22.x'
 
+      # Run npm commands specifically inside the frontend folder
       - name: npm install, build, and test
+        working-directory: ./frontend
         run: |
-          cd frontend
           npm install
           npm run build --if-present
           npm run test --if-present
       
+      # Upload ONLY the compiled dist folder from inside the frontend folder
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
         with:
           name: node-app
-          path: ./dist
+          path: ./frontend/dist
 
   deploy:
     runs-on: ubuntu-latest
@@ -44,6 +46,7 @@ jobs:
       contents: read #This is required for actions/checkout
 
     steps:
+      # Download the compiled files into a folder named 'release'
       - name: Download artifact from build job
         uses: actions/download-artifact@v4
         with:
@@ -57,6 +60,7 @@ jobs:
           tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_7FD0DFC657C7492392EB43FAB980AB4B }}
           subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_42EE78044D8C4B71BFA79CE22A1496FD }}
 
+      # Deploy only the contents of the 'release' folder to Azure
       - name: 'Deploy to Azure Web App'
         uses: azure/webapps-deploy@v3
         id: deploy-to-webapp
@@ -64,4 +68,3 @@ jobs:
           app-name: 'AssetManagementSystem'
           slot-name: 'Production'
           package: ./release
-          
