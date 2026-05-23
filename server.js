@@ -143,7 +143,7 @@ app.put('/api/requests/:id/reject', verifyToken, verifyAdmin, async (req, res) =
 /**
  * 🌐 STATIC FILE SERVING FOR AZURE PRODUCTION
  */
-const frontendDistPath = path.join(process.env.HOME || __dirname, "frontend", "dist");
+const frontendDistPath = path.join(process.env.HOME || __dirname, "site", "wwwroot", "frontend", "dist");
 
 app.use(express.static(frontendDistPath));
 
