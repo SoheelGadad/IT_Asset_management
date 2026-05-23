@@ -143,24 +143,24 @@ app.put('/api/requests/:id/reject', verifyToken, verifyAdmin, async (req, res) =
 /**
  * 🌐 STATIC FILE SERVING FOR AZURE PRODUCTION
  */
-const frontendDistPath = path.join(process.env.HOME || __dirname, "site", "wwwroot", "frontend", "dist");
+const frontendDistPath = path.join(__dirname, "frontend", "dist");
 
 app.use(express.static(frontendDistPath));
 
+// Catch-all route for SPA Routing
 app.get("*", (req, res, next) => {
-    // 1. Skip if it's an API route
-    if (req.url.startsWith('/api/')) {
-        return next();
-    }
+    // 1. Let API routes pass through to express routers
+    if (req.url.startsWith('/api/')) return next();
 
-    // 2. Build the path to the requested file
-    const filePath = path.join(frontendDistPath, req.url);
+    // 2. Safely resolve the requested file path
+    const safeUrl = req.url.split('?')[0]; 
+    const filePath = path.join(frontendDistPath, safeUrl);
 
-    // 3. If the file exists, serve it (this fixes the CSS/JS MIME type error)
+    // 3. Serve physical files if they exist (Fixes MIME type errors)
     if (fs.existsSync(filePath) && fs.lstatSync(filePath).isFile()) {
         res.sendFile(filePath);
     } else {
-        // 4. Otherwise, return index.html (SPA routing)
+        // 4. Otherwise, send index.html for React Router
         res.sendFile(path.join(frontendDistPath, "index.html"));
     }
 });
