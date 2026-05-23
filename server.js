@@ -2,7 +2,8 @@ const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
-const bcrypt = require("bcrypt");
+const bcryptjs = require("bcryptjs"); // Updated to bcryptjs for Azure compatibility
+const path = require("path");
 require("dotenv").config();
 
 const app = express();
@@ -19,6 +20,7 @@ const allowedOrigins = [
   process.env.FRONTEND_URL  
 ];
 
+// CORS configuration for production
 app.use(cors({
   origin: function (origin, callback) {
     if (!origin) return callback(null, true);
@@ -52,9 +54,6 @@ const adminRoutes = require("./routes/AdminUsers");
 const assignmentRoutes = require('./routes/assignmentRoutes');
 const employee = require('./routes/employee');
 
-/**
- * 🚀 API ROUTES
- */
 app.use("/api", assetRoutes);
 app.use("/api", authRoute);
 app.use("/api", adminRoutes);
@@ -65,13 +64,11 @@ app.use("/api", employee);
  * 📩 ASSET SELF-SERVICE & AUTOMATION FLOW
  */
 
-// 1. Employee: Submit claim for a new asset (Requires Login)
 app.post('/api/requests', verifyToken, async (req, res) => {
     try {
         const { assetId, model, assetType, serialNo, location } = req.body;
-
         const newRequest = new Request({
-            userId: req.userId, // Taken from the verified token
+            userId: req.userId, 
             assetId, 
             model,
             assetType,
@@ -80,15 +77,13 @@ app.post('/api/requests', verifyToken, async (req, res) => {
             assignmentDate: new Date(),
             status: 'pending'
         });
-
         await newRequest.save();
-        res.status(201).json({ message: "Request received. Admin will verify shortly." });
+        res.status(201).json({ message: "Request received." });
     } catch (error) {
         res.status(500).json({ error: "Failed to process request." });
     }
 });
 
-// 2. Admin: Get all pending requests (Requires Admin Login)
 app.get('/api/requests/pending', verifyToken, verifyAdmin, async (req, res) => {
     try {
         const requests = await Request.find({ status: 'pending' });
@@ -98,27 +93,24 @@ app.get('/api/requests/pending', verifyToken, verifyAdmin, async (req, res) => {
     }
 });
 
-// 3. Admin: APPROVE & AUTO-MIGRATE (Requires Admin Login)
 app.put('/api/requests/:id/approve', verifyToken, verifyAdmin, async (req, res) => {
     try {
         const request = await Request.findById(req.params.id);
         if (!request) return res.status(404).json({ error: "Request not found" });
 
-        // Update or Create the Asset in Inventory
         await Asset.findOneAndUpdate(
             { assetId: request.assetId },
             { 
-                assetName: request.model || "New Asset",
+                assetName: request.model || "Assigned Asset",
                 assetType: request.assetType,
                 serialNumber: request.serialNo,
                 location: request.location,
                 assignedUser: request.userId,
                 status: 'Assigned' 
             },
-            { upsert: true, new: true }
+            { upsert: false } 
         );
 
-        // Record the Assignment
         const newAssignment = new Assignment({
             userId: request.userId,
             assetId: request.assetId,
@@ -130,45 +122,56 @@ app.put('/api/requests/:id/approve', verifyToken, verifyAdmin, async (req, res) 
         request.status = 'approved';
         await request.save();
 
-        res.status(200).json({ message: "Approved! Asset inventory and assignment updated." });
+        res.status(200).json({ message: "Approved successfully." });
     } catch (error) {
-        console.error("Approve Error:", error);
         res.status(500).json({ error: "Internal Server Error during approval." });
     }
 });
 
-// 4. Admin: REJECT REQUEST (Requires Admin Login)
 app.put('/api/requests/:id/reject', verifyToken, verifyAdmin, async (req, res) => {
     try {
         const request = await Request.findById(req.params.id);
         if (!request) return res.status(404).json({ error: "Request not found" });
-
         request.status = 'rejected';
         await request.save();
-
-        res.status(200).json({ message: "Request rejected successfully." });
+        res.status(200).json({ message: "Request rejected." });
     } catch (error) {
         res.status(500).json({ error: "Error during rejection." });
     }
 });
+
+/**
+ * 🌐 STATIC FILE SERVING FOR AZURE PRODUCTION
+ */
+const frontendDistPath = path.join(process.env.HOME || __dirname, "site", "wwwroot", "frontend", "dist");
+
+app.use(express.static(frontendDistPath));
+
+app.get("*", (req, res, next) => {
+    if (req.url.startsWith('/api/')) {
+        return next();
+    }
+    res.sendFile(path.join(frontendDistPath, "index.html"));
+});
+
 /**
  * 🏁 SERVER STARTUP
  */
 const startServer = async () => {
   try {
     if (!process.env.MONGODB_URI) {
-      console.error("❌ MONGODB_URI missing in .env");
+      console.error("❌ MONGODB_URI missing!");
       process.exit(1); 
     }
 
     await mongoose.connect(process.env.MONGODB_URI);
     console.log("✅ MongoDB Atlas Connected Successfully");
 
-    const PORT = process.env.PORT || 5001; 
-    app.listen(PORT, "0.0.0.0", () => {
-      console.log(`🚀 Server running on port ${PORT}`);
+    // Correctly using process.env.PORT for Azure
+    const PORT = process.env.PORT || 8080; 
+    app.listen(PORT, () => {
+      console.log(`🚀 Server running on port: ${PORT}`);
     });
-
   } catch (error) {
     console.error("❌ Startup Error:", error.message);
     process.exit(1);
