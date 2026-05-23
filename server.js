@@ -2,7 +2,7 @@ const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
-const path = require("path");
+const bcrypt = require("bcrypt");
 require("dotenv").config();
 
 const app = express();
@@ -12,11 +12,20 @@ const app = express();
  */
 app.set("trust proxy", 1); 
 
-// CORS configuration for production
+const allowedOrigins = [
+  "http://localhost:3000",
+  "http://localhost:5173",
+  "http://localhost:5001", 
+  process.env.FRONTEND_URL  
+];
+
 app.use(cors({
   origin: function (origin, callback) {
-    // Allows your frontend to talk to the backend seamlessly
-    callback(null, true);
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.indexOf(origin) === -1) {
+      return callback(new Error('CORS Policy: This origin is not allowed'), false);
+    }
+    return callback(null, true);
   },
   credentials: true, 
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
@@ -43,6 +52,9 @@ const adminRoutes = require("./routes/AdminUsers");
 const assignmentRoutes = require('./routes/assignmentRoutes');
 const employee = require('./routes/employee');
 
+/**
+ * 🚀 API ROUTES
+ */
 app.use("/api", assetRoutes);
 app.use("/api", authRoute);
 app.use("/api", adminRoutes);
@@ -53,11 +65,13 @@ app.use("/api", employee);
  * 📩 ASSET SELF-SERVICE & AUTOMATION FLOW
  */
 
+// 1. Employee: Submit claim for a new asset (Requires Login)
 app.post('/api/requests', verifyToken, async (req, res) => {
     try {
         const { assetId, model, assetType, serialNo, location } = req.body;
+
         const newRequest = new Request({
-            userId: req.userId, 
+            userId: req.userId, // Taken from the verified token
             assetId, 
             model,
             assetType,
@@ -66,13 +80,15 @@ app.post('/api/requests', verifyToken, async (req, res) => {
             assignmentDate: new Date(),
             status: 'pending'
         });
+
         await newRequest.save();
-        res.status(201).json({ message: "Request received." });
+        res.status(201).json({ message: "Request received. Admin will verify shortly." });
     } catch (error) {
         res.status(500).json({ error: "Failed to process request." });
     }
 });
 
+// 2. Admin: Get all pending requests (Requires Admin Login)
 app.get('/api/requests/pending', verifyToken, verifyAdmin, async (req, res) => {
     try {
         const requests = await Request.find({ status: 'pending' });
@@ -82,24 +98,27 @@ app.get('/api/requests/pending', verifyToken, verifyAdmin, async (req, res) => {
     }
 });
 
+// 3. Admin: APPROVE & AUTO-MIGRATE (Requires Admin Login)
 app.put('/api/requests/:id/approve', verifyToken, verifyAdmin, async (req, res) => {
     try {
         const request = await Request.findById(req.params.id);
         if (!request) return res.status(404).json({ error: "Request not found" });
 
+        // Update or Create the Asset in Inventory
         await Asset.findOneAndUpdate(
             { assetId: request.assetId },
             { 
-                assetName: request.model || "Assigned Asset",
+                assetName: request.model || "New Asset",
                 assetType: request.assetType,
                 serialNumber: request.serialNo,
                 location: request.location,
                 assignedUser: request.userId,
                 status: 'Assigned' 
             },
-            { upsert: false } 
+            { upsert: true, new: true }
         );
 
+        // Record the Assignment
         const newAssignment = new Assignment({
             userId: request.userId,
             assetId: request.assetId,
@@ -111,43 +130,27 @@ app.put('/api/requests/:id/approve', verifyToken, verifyAdmin, async (req, res) 
         request.status = 'approved';
         await request.save();
 
-        res.status(200).json({ message: "Approved successfully." });
+        res.status(200).json({ message: "Approved! Asset inventory and assignment updated." });
     } catch (error) {
+        console.error("Approve Error:", error);
         res.status(500).json({ error: "Internal Server Error during approval." });
     }
 });
 
+// 4. Admin: REJECT REQUEST (Requires Admin Login)
 app.put('/api/requests/:id/reject', verifyToken, verifyAdmin, async (req, res) => {
     try {
         const request = await Request.findById(req.params.id);
         if (!request) return res.status(404).json({ error: "Request not found" });
+
         request.status = 'rejected';
         await request.save();
-        res.status(200).json({ message: "Request rejected." });
+
+        res.status(200).json({ message: "Request rejected successfully." });
     } catch (error) {
         res.status(500).json({ error: "Error during rejection." });
     }
 });
-
-/**
- * 🌐 STATIC FILE SERVING FOR AZURE PRODUCTION
- */
-// Use process.env.HOME for the absolute Azure Windows path
-const frontendDistPath = path.join(process.env.HOME || __dirname, "site", "wwwroot", "frontend", "dist");
-
-// Serve static files from the build folder
-app.use(express.static(frontendDistPath));
-
-// Catch-all route for SPA client-side routing
-app.get("*", (req, res, next) => {
-    // If request is for an API endpoint, skip to the next handler
-    if (req.url.startsWith('/api/')) {
-        return next();
-    }
-    // Otherwise, return index.html
-    res.sendFile(path.join(frontendDistPath, "index.html"));
-});
-
 /**
  * 🏁 SERVER STARTUP
  */
