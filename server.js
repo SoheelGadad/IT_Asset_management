@@ -157,17 +157,18 @@ app.put('/api/requests/:id/reject', verifyToken, verifyAdmin, async (req, res) =
 const startServer = async () => {
   try {
     if (!process.env.MONGODB_URI) {
-      console.error("❌ MONGODB_URI missing!");
+      console.error("❌ MONGODB_URI missing in .env");
       process.exit(1); 
     }
 
     await mongoose.connect(process.env.MONGODB_URI);
     console.log("✅ MongoDB Atlas Connected Successfully");
 
-    const PORT = process.env.PORT || 8000; 
-    app.listen(PORT, () => {
-      console.log(`🚀 Server running on port: ${PORT}`);
+    const PORT = process.env.PORT || 5001; 
+    app.listen(PORT, "0.0.0.0", () => {
+      console.log(`🚀 Server running on port ${PORT}`);
     });
+
   } catch (error) {
     console.error("❌ Startup Error:", error.message);
     process.exit(1);
