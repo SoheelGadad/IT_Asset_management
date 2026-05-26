@@ -16,7 +16,8 @@ app.set("trust proxy", 1);
 const allowedOrigins = [
   "http://localhost:3000",
   "http://localhost:5173",
-  "http://localhost:5001", 
+  "http://localhost:5001",
+  "https://backend-of-it-asset-management.onrender.com", 
   process.env.FRONTEND_URL  
 ];
 
