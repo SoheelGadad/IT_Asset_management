@@ -3,7 +3,7 @@
 // If we are running locally (DEV), use localhost. 
 // If we are on Azure (PROD), use an empty string so it uses relative paths.
 export const API_BASE_URL = import.meta.env.DEV 
-  ? "https://assetmanagementsystem-hkdfe0dzd9gchkbj.centralindia-01.azurewebsites.net" 
+  ? "http://localhost:5001" 
   : (import.meta.env.VITE_API_URL || "");
 
 export const getApiUrl = (endpoint) => {
