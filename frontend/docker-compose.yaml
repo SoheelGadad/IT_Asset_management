@@ -1,16 +1,15 @@
 version: '3.8'
 
 services:
-
   api:
     build:
       context: ./server
       dockerfile: Dockerfile
     container_name: api4
     ports:
-      - "5001:5001"
+      - "8080:8080" # FIX: Changed from 5001 to 8080 to match your Express code
     env_file:
-    - ./server/.env
+      - ./server/.env
     restart: always
 
   ui:
@@ -22,4 +21,7 @@ services:
       - api
     ports:
       - "3000:3000"
+    environment:
+      # You MUST pass the live production URL of your API container here
+      - VITE_API_URL=https://assetmanagementsystem-hkdfe0dzd9gchkbj.centralindia-01.azurewebsites.net
     restart: always

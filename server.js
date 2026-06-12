@@ -14,7 +14,8 @@ const app = express();
 app.set("trust proxy", 1); 
 
 const allowedOrigins = [
-  "https://backend-of-it-asset-management.onrender.com", 
+  // FIX: Removed the trailing slash at the end of the URL
+  "https://assetmanagementsystem-hkdfe0dzd9gchkbj.centralindia-01.azurewebsites.net", 
   process.env.FRONTEND_URL  
 ];
 

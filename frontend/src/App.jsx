@@ -21,7 +21,7 @@ import AddNewAssetPage from "./pages/AddNewAssetPage";
 import EditAssetPage from "./components/EditAsset";
 import EditUserPage from "./pages/EditUserPage"; 
 import AssignedAssetPage from "./pages/AssignedAssetPage";
-import ManageRequests from "./pages/ManageRequests"; // ✨ NEW: Import the request manager
+import ManageRequests from "./pages/ManageRequests"; 
 import MaintenanceDashboard  from "./components/MaintenanceDashboard";
 
 // --- Employee Pages ---
@@ -57,7 +57,7 @@ function App() {
                         <Route path="edit-asset/:id" element={<EditAssetPage />} />
                         <Route path="assigned-assets" element={<AssignedAssetPage />} />
                         <Route path="maintenance-dashboard" element={<MaintenanceDashboard />} />
-                        <Route path="manage-requests" element={<ManageRequests />} /> {/* ✨ NEW: Route for Admin Approval */}
+                        <Route path="manage-requests" element={<ManageRequests />} /> 
                         
                         {/* 👥 User Management (Add & Edit) */}
                         <Route path="create-user" element={<EditUserPage />} />
@@ -71,7 +71,8 @@ function App() {
                         <Route path="technician-dashboard/:assetId" element={<TechnicianDashboard />} />
                         <Route path="add-new-technician-status/:id" element={<AddNewTechnicianstatus />} />
 
-                        <Route path="/ComingSoons" element={<ComingSoons />} />
+                        {/* 🚨 FIX: Removed leading slash from "/ComingSoons" to protect sub-route mapping */}
+                        <Route path="ComingSoons" element={<ComingSoons />} />
                     </Route>
                 </Route>
 

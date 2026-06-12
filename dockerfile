@@ -1,17 +1,36 @@
-# Use a smaller, faster image
-FROM node:20-alpine
+# ==========================================
+# STAGE 1: Build the React Frontend
+# ==========================================
+FROM node:20-alpine AS ui-build
+WORKDIR /usr/src/ui
 
-# Create app directory
+# Copy UI package files and install dependencies
+COPY ui/package*.json ./
+RUN npm install
+
+# Copy UI source files and build the production assets
+COPY ui/ .
+RUN npm run build
+
+# ==========================================
+# STAGE 2: Run the Express Backend
+# ==========================================
+FROM node:20-alpine
 WORKDIR /usr/src/app
 
-# Install app dependencies
-COPY package*.json ./
+# Copy Backend package files and install only production dependencies
+COPY server/package*.json ./
 RUN npm install --production
 
-# Bundle app source
-COPY . .
+# Copy Backend application code
+COPY server/ .
 
-# Render will use this, but app.js must also use process.env.PORT
-EXPOSE 10000
+# CRITICAL AZURE BRIDGE: Copy the built 'dist' folder from Stage 1 
+# directly into the 'frontend/dist' folder your Express app expects
+COPY --from=ui-build /usr/src/ui/dist ./frontend/dist
 
-CMD ["node", "app.js"]
+# FIX: Azure App Service defaults to port 8080 for custom containers
+EXPOSE 8080
+
+# FIX: Match the entry point file name from your Express script (index.js)
+CMD ["node", "index.js"]
