@@ -2,24 +2,24 @@ import React, { useState } from "react";
 import { jwtDecode } from "jwt-decode";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
-import { Globe, Mail, Lock, LogIn, Loader2 } from "lucide-react"; // Added Loader2
+import { Globe, Mail, Lock, LogIn, Loader2 } from "lucide-react"; 
+import { getApiUrl } from "../api"; // 🌟 Connected your central API utility file (adjust paths if needed)
 
 const LoginPage = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [isLoading, setIsLoading] = useState(false); // ✨ New state for loading
+  const [isLoading, setIsLoading] = useState(false); 
   const navigate = useNavigate();
-
-  const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5001";
 
   const loginSubmit = async (e) => {
     e.preventDefault();
-    setIsLoading(true); // 🚀 Start loading
+    setIsLoading(true); 
     
     const loginDetails = { email, password };
 
     try {
-      const res = await fetch(`${API_BASE_URL}/api/login`, {
+      // 🌟 Replaced the hardcoded URL string with your safe environment function
+      const res = await fetch(getApiUrl("api/login"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(loginDetails),
@@ -46,21 +46,20 @@ const LoginPage = () => {
         
         setTimeout(() => {
             navigate(role === 'admin' ? "/admin-dashboard" : "/employee-dashboard");
-        }, 1500); // 🕒 Slightly longer delay so they see the success state
+        }, 1500); 
       } else {
         toast.error(data.error || "Please check your credentials");
-        setIsLoading(false); // 🛑 Stop loading on error
+        setIsLoading(false); 
       }
     } catch (error) {
       console.error("Login fetch error:", error);
       toast.error("Server connection failed");
-      setIsLoading(false); // 🛑 Stop loading on error
+      setIsLoading(false); 
     }
   };
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col font-sans relative">
-      {/* ✨ Loading Overlay Pop-up */}
       {isLoading && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-white/60 backdrop-blur-sm">
           <div className="bg-white p-8 rounded-2xl shadow-2xl flex flex-col items-center border border-gray-100">
@@ -86,7 +85,7 @@ const LoginPage = () => {
                 <Mail size={16} className="text-blue-600" /> Email Address
               </label>
               <input
-                disabled={isLoading} // Disable input while loading
+                disabled={isLoading} 
                 className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition disabled:bg-gray-50"
                 type="email" id="email" placeholder="Enter your email"
                 value={email} onChange={(e) => setEmail(e.target.value)} required
@@ -98,7 +97,7 @@ const LoginPage = () => {
                 <Lock size={16} className="text-blue-600" /> Password
               </label>
               <input
-                disabled={isLoading} // Disable input while loading
+                disabled={isLoading} 
                 className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition disabled:bg-gray-50"
                 type="password" id="password" placeholder="••••••••"
                 value={password} onChange={(e) => setPassword(e.target.value)} required
@@ -107,7 +106,7 @@ const LoginPage = () => {
 
             <button 
               type="submit" 
-              disabled={isLoading} // Prevent double clicks
+              disabled={isLoading} 
               className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-xl shadow-lg transition transform active:scale-[0.98] flex justify-center items-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
             >
               {isLoading ? (
@@ -132,7 +131,6 @@ const LoginPage = () => {
   );
 };
 
-// ... (Rest of your helper functions stay the same)
 export const getUserType = () => { /* ... same code ... */ };
 export const getUserId = () => { /* ... same code ... */ };
 

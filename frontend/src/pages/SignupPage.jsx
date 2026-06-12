@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { Globe, UserPlus, Mail, Lock, ShieldCheck } from "lucide-react";
+import { getApiUrl } from "../api"; // 🌟 Connected your central API utility file (adjust path if needed)
 
 const SignupPage = () => {
   const [username, setUsername] = useState("");
@@ -10,16 +11,13 @@ const SignupPage = () => {
   const [userType, setUserType] = useState("employee");
   const navigate = useNavigate();
 
-  // --- THE FIX: Define the API Base URL ---
-  const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5001";
-
   const submitForm = async (e) => {
     e.preventDefault();
     const userDetails = { username, password, email, userType };
 
     try {
-      // --- THE FIX: Use the full URL here ---
-      const res = await fetch(`${API_BASE_URL}/api/register`, {
+      // 🌟 Replaced the hardcoded URL string with your safe environment function
+      const res = await fetch(getApiUrl("api/register"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(userDetails),
@@ -39,10 +37,8 @@ const SignupPage = () => {
     }
   };
 
-  // ... (Rest of your UI code remains exactly the same)
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col font-sans">
-
       {/* 🚀 Main Content Area */}
       <main className="flex-grow flex items-center justify-center p-6">
         <div className="w-full max-w-md bg-white rounded-3xl shadow-xl shadow-blue-100/50 border border-gray-100 overflow-hidden">
@@ -69,7 +65,7 @@ const SignupPage = () => {
               />
             </div>
 
-            {/* Email Field */}
+            {"/* Email Field */"}
             <div>
               <label className="flex items-center gap-2 mb-2 text-sm font-bold text-gray-700" htmlFor="email">
                 <Mail size={16} className="text-blue-600" /> Email Address
@@ -85,7 +81,7 @@ const SignupPage = () => {
               />
             </div>
 
-            {/* Password Field */}
+            {"/* Password Field */"}
             <div>
               <label className="flex items-center gap-2 mb-2 text-sm font-bold text-gray-700" htmlFor="password">
                 <Lock size={16} className="text-blue-600" /> Password
@@ -101,7 +97,7 @@ const SignupPage = () => {
               />
             </div>
 
-            {/* Role Field */}
+            {"/* Role Field */"}
             <div>
               <label className="flex items-center gap-2 mb-2 text-sm font-bold text-gray-700" htmlFor="userType">
                 <ShieldCheck size={16} className="text-blue-600" /> Preferred Role
