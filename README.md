@@ -95,7 +95,7 @@ Follow these steps to spin up a local instance of the application for debugging 
 
 ```bash
 # Clone the repository
-git clone https://github.com/your-username/PeopleDesk.git
+git clone https://github.com/SoheelGadad/IT_Asset_management.git
 cd PeopleDesk
 
 # Install backend root dependencies
