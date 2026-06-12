@@ -1,17 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Package, Send, Hash, Tag, MapPin, Cpu, Calendar } from 'lucide-react'; // Added MapPin, Cpu, Calendar
+import { Package, Send, Hash, Tag, MapPin, Cpu, Calendar } from 'lucide-react'; 
 import { toast } from 'react-toastify';
+import { getApiUrl } from '../api'; // 🌟 Connected your central API utility file (adjust path if needed)
 
 const ClaimAsset = ({ userId, onComplete }) => {
     const [formData, setFormData] = useState({
         assetId: "",
         assetName: "",
         assetType: "Laptop",
-        serialNumber: "",  // ✨ New Field
-        location: "",      // ✨ New Field
-        model: "",         // ✨ New Field
-        receivedDate: new Date().toISOString().split('T')[0] // ✨ Default to today
+        serialNumber: "",  
+        location: "",      
+        model: "",         
+        receivedDate: new Date().toISOString().split('T')[0] 
     });
     const [submitting, setSubmitting] = useState(false);
 
@@ -22,8 +23,6 @@ const ClaimAsset = ({ userId, onComplete }) => {
         const generatedId = `AST-${year}-${randomNum}`;
         setFormData(prev => ({ ...prev, assetId: generatedId }));
     }, []);
-    
-    const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5001";
 
     const handleClaim = async (e) => {
         e.preventDefault();
@@ -34,9 +33,10 @@ const ClaimAsset = ({ userId, onComplete }) => {
 
         setSubmitting(true);
         try {
-            await axios.post(`${API_BASE_URL}/api/requests`, {
+            // 🌟 Updated Axios post endpoint to handle deployments dynamically through your cloud wrapper
+            await axios.post(getApiUrl('api/requests'), {
                 userId,
-                ...formData, // ✨ Sends all fields (serialNumber, location, model, receivedDate)
+                ...formData, 
                 assetId: formData.assetId.trim().toUpperCase(),
                 requestType: 'assignment',
                 status: 'pending'

@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, Link } from "react-router-dom";
 import { Globe, RefreshCcw, ArrowLeft, Lock, ShieldCheck } from "lucide-react";
 import { toast } from "react-toastify";
 import axios from "axios";
+import { getApiUrl } from "../api"; // 🌟 Connected your central API utility file (adjust path if needed)
 
 // ✨ Set default to include cookies for Render/Security
 axios.defaults.withCredentials = true;
@@ -12,8 +13,6 @@ const EditUserPage = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [isTargetAdmin, setIsTargetAdmin] = useState(false); 
-
-  const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5001";
 
   const [userData, setUserData] = useState({
     userId: "",
@@ -29,7 +28,8 @@ const EditUserPage = () => {
       const fetchUser = async () => {
         setLoading(true);
         try {
-          const res = await axios.get(`${API_BASE_URL}/api/users/${id}`);
+          // 🌟 Updated Axios call to pass through your environment wrapper
+          const res = await axios.get(getApiUrl(`api/users/${id}`));
           setUserData({
             ...res.data,
             password: "", 
@@ -47,7 +47,7 @@ const EditUserPage = () => {
       };
       fetchUser();
     }
-  }, [id, navigate, API_BASE_URL]);
+  }, [id, navigate]); // 🌟 Cleaned up API_BASE_URL from tracking parameters
 
   const handleInputChange = (e) => {
     setUserData({ ...userData, [e.target.name]: e.target.value });
@@ -69,10 +69,12 @@ const EditUserPage = () => {
       }
 
       if (id) {
-        await axios.put(`${API_BASE_URL}/api/users/${id}`, submitData);
+        // 🌟 Updated Axios PUT target with central utility
+        await axios.put(getApiUrl(`api/users/${id}`), submitData);
         toast.success("Identity updated successfully!");
       } else {
-        await axios.post(`${API_BASE_URL}/api/users`, submitData);
+        // 🌟 Updated Axios POST target with central utility
+        await axios.post(getApiUrl("api/users"), submitData);
         toast.success("New account initialized!");
       }
       navigate("/user-management");
@@ -162,7 +164,7 @@ const EditUserPage = () => {
                             name="password" 
                             value={userData.password} 
                             onChange={handleInputChange} 
-                            className="flex-grow px-5 py-4 rounded-2xl border border-gray-200 outline-none focus:ring-4 focus:ring-blue-50 focus:border-blue-500 font-mono" 
+                            className="w-full px-5 py-4 rounded-2xl border border-gray-200 outline-none focus:ring-4 focus:ring-blue-50 focus:border-blue-500 font-mono" 
                             placeholder={id ? "Enter new key to reset (optional)..." : "Set initial password..."}
                             required={!id} 
                         />

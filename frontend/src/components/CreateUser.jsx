@@ -3,14 +3,13 @@ import { useNavigate, useParams, Link } from "react-router-dom";
 import { Globe, User, Mail, Shield, Key, Copy, Check, RefreshCcw, ArrowLeft } from "lucide-react";
 import { toast } from "react-toastify";
 import Logout from "./Logout";
+import { getApiUrl } from "../api"; // 🌟 Connected your central API utility file (adjust path if needed)
 
 const EditUsers = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const [copied, setCopied] = useState(false);
   const [loading, setLoading] = useState(false);
-
-  const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5001";
 
   const [userData, setUserData] = useState({
     userId: "",
@@ -27,7 +26,8 @@ const EditUsers = () => {
       const fetchUser = async () => {
         setLoading(true);
         try {
-          const response = await fetch(`${API_BASE_URL}/api/users/${id}`, { credentials: "include" });
+          // 🌟 Updated raw URL string to use getApiUrl
+          const response = await fetch(getApiUrl(`api/users/${id}`), { credentials: "include" });
           const data = await response.json();
           if (response.ok) {
             setUserData({ ...data, password: "" }); // Don't fetch/show hashed passwords
@@ -40,7 +40,7 @@ const EditUsers = () => {
       };
       fetchUser();
     }
-  }, [id, API_BASE_URL]);
+  }, [id]); // 🌟 Cleaned up global variables from dependencies
 
   const handleInputChange = (event) => {
     const { name, value } = event.target;
@@ -67,7 +67,8 @@ const EditUsers = () => {
   const handleSubmit = async (event) => {
     event.preventDefault();
     const method = id ? "PUT" : "POST";
-    const url = id ? `${API_BASE_URL}/api/users/${id}` : `${API_BASE_URL}/api/users`;
+    // 🌟 Replaced the hardcoded URL routing assignments with your secure utility wrapper
+    const url = id ? getApiUrl(`api/users/${id}`) : getApiUrl("api/users");
 
     try {
       const response = await fetch(url, {
@@ -91,7 +92,6 @@ const EditUsers = () => {
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col font-sans text-gray-900">
-
       <main className="flex-grow flex items-center justify-center p-6 py-12">
         <div className="w-full max-w-2xl bg-white rounded-[2.5rem] shadow-xl shadow-blue-100/50 border border-gray-100 overflow-hidden">
           <div className="bg-slate-900 p-8 text-center text-white">

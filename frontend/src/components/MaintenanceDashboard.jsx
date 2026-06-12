@@ -11,17 +11,17 @@ import {
     Filter,
     Calendar,
     User,
-    ArrowLeft
+    ArrowLeft,
+    ShieldCheck
 } from 'lucide-react';
 import Logout from './Logout';
+import { getApiUrl } from '../api'; // 🌟 Connected your central API utility file (adjust path if needed)
 
 const MaintenanceDashboard = () => {
     const [logs, setLogs] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState("");
     const navigate = useNavigate();
-
-    const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5001";
 
     useEffect(() => {
         fetchAllMaintenanceLogs();
@@ -30,8 +30,8 @@ const MaintenanceDashboard = () => {
     const fetchAllMaintenanceLogs = async () => {
         try {
             setLoading(true);
-            // Fetch all assets; we will filter for those with issues/maintenance status
-            const res = await axios.get(`${API_BASE_URL}/api/assets`, { withCredentials: true });
+            // 🌟 Updated the data fetching route to leverage your secure global cloud path variables
+            const res = await axios.get(getApiUrl('api/assets'), { withCredentials: true });
             
             // Logic: Show assets that are NOT 'Active' or have existing technician notes
             const issues = res.data.filter(asset => 

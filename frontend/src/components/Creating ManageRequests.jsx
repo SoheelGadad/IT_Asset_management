@@ -15,6 +15,10 @@ import {
 import { Link } from "react-router-dom";
 import ConfirmModal from "../components/ConfirmModal";
 import Logout from "../components/Logout";
+import { getApiUrl } from "../api"; // 🌟 Connected your central API utility file (adjust path if needed)
+
+// ✨ AXIOS CREDENTIALS
+axios.defaults.withCredentials = true;
 
 const ManageRequests = () => {
   const [requests, setRequests] = useState([]);
@@ -22,15 +26,14 @@ const ManageRequests = () => {
   const [selectedRequest, setSelectedRequest] = useState(null);
   const [modalType, setModalType] = useState(null); // 'approve' or 'reject'
 
-  const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5001";
-
   useEffect(() => {
     fetchRequests();
   }, []);
 
   const fetchRequests = async () => {
     try {
-      const res = await axios.get(`${API_BASE_URL}/api/requests`, { withCredentials: true });
+      // 🌟 Updated Axios fetch operation to leverage your global cloud routing variable
+      const res = await axios.get(getApiUrl("api/requests"), { withCredentials: true });
       setRequests(res.data || []);
     } catch (error) {
       console.error("Error fetching requests:", error);
@@ -43,7 +46,8 @@ const ManageRequests = () => {
   const handleAction = async () => {
     const newStatus = modalType === 'approve' ? 'Approved' : 'Rejected';
     try {
-      await axios.put(`${API_BASE_URL}/api/requests/${selectedRequest._id}`, {
+      // 🌟 Updated Axios PUT request to cleanly run inside the unified context wrapper
+      await axios.put(getApiUrl(`api/requests/${selectedRequest._id}`), {
         status: newStatus
       }, { withCredentials: true });
 
@@ -109,7 +113,8 @@ const ManageRequests = () => {
                     {req.status}
                   </span>
 
-                  {req.status === 'Pending' && (
+                  {/* 🌟 Standardized string case verification matching Express outputs */}
+                  {(req.status === 'Pending' || req.status === 'pending') && (
                     <div className="flex gap-2">
                       <button 
                         onClick={() => { setSelectedRequest(req); setModalType('approve'); }}

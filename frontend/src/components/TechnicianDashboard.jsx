@@ -8,6 +8,7 @@ import {
     Undo2, ShoppingCart, UserMinus
 } from 'lucide-react';
 import { toast } from 'react-toastify';
+import { getApiUrl } from '../api'; // 🌟 Connected your central API utility file (adjust path if needed)
 
 const TechnicianDashboard = () => {
     const { assetId: urlId } = useParams();
@@ -16,8 +17,6 @@ const TechnicianDashboard = () => {
     const [searchId, setSearchId] = useState(urlId || "");
     const [assetData, setAssetData] = useState(null);
     const [error, setError] = useState(false);
-
-    const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5001";
 
     useEffect(() => {
         if (urlId && urlId !== 'search') {
@@ -31,7 +30,8 @@ const TechnicianDashboard = () => {
         setLoading(true);
         setError(false);
         try {
-            const res = await axios.get(`${API_BASE_URL}/api/assets/${id.toUpperCase()}?t=${Date.now()}`, { withCredentials: true });
+            // 🌟 Updated raw URL template literal string to utilize the getApiUrl configuration
+            const res = await axios.get(getApiUrl(`api/assets/${id.toUpperCase()}?t=${Date.now()}`), { withCredentials: true });
             const data = res.data;
 
             // Sort history to show most recent at top
@@ -50,7 +50,7 @@ const TechnicianDashboard = () => {
             });
         } catch (err) {
             console.error("Fetch error:", err);
-            setAssetData(null);
+            assetData(null);
             setError(true);
         } finally {
             setLoading(false);
@@ -62,7 +62,8 @@ const TechnicianDashboard = () => {
         if(!confirm) return;
 
         try {
-            await axios.post(`${API_BASE_URL}/api/requests`, {
+            // 🌟 Converted the POST operation endpoint to leverage the environment wrapper
+            await axios.post(getApiUrl('api/requests'), {
                 requestType: 'procurement',
                 assetName: 'NEW ASSET REQUEST',
                 status: 'pending',
@@ -76,7 +77,8 @@ const TechnicianDashboard = () => {
 
     const handleReportIssue = async () => {
         try {
-            await axios.put(`${API_BASE_URL}/api/assets/${assetData._id}`, {
+            // 🌟 Updated the database state patch mutation to pipe through your proxy configuration
+            await axios.put(getApiUrl(`api/assets/${assetData._id}`), {
                 status: 'Maintenance',
                 notes: `USER REPORTED ISSUE: Hardware check requested on ${new Date().toLocaleDateString()}`
             }, { withCredentials: true });
@@ -148,7 +150,7 @@ const TechnicianDashboard = () => {
                                     </div>
                                 </div>
 
-                                {/* 🕒 UPDATED: Legacy & History Section */}
+                                {/* 🕒 Legacy & History Section */}
                                 <div className="grid md:grid-cols-2 gap-6">
                                     {/* Admin Update History */}
                                     <div className="bg-white p-6 rounded-[2.5rem] border border-gray-100 shadow-sm">
@@ -165,7 +167,7 @@ const TechnicianDashboard = () => {
                                         </div>
                                     </div>
 
-                                    {/* 🆕 Past Assignments (Old Assets View) */}
+                                    {/* Past Assignments */}
                                     <div className="bg-white p-6 rounded-[2.5rem] border border-gray-100 shadow-sm">
                                         <h3 className="text-xs font-black uppercase tracking-widest text-gray-400 mb-6 flex items-center gap-2">
                                             <UserMinus size={16} className="text-indigo-600" /> Legacy Owners

@@ -4,6 +4,7 @@ import ConfirmModal from "./ConfirmModal";
 import { ArrowUpDown, Trash2, Edit, CheckCircle, XCircle, UserPlus, Users, Shield, Search, ChevronLeft, ChevronRight, ListFilter } from "lucide-react";
 import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
+import { getApiUrl } from "../api"; // 🌟 Connected your central API utility file (adjust path if needed)
 
 // ✨ AXIOS CREDENTIALS
 axios.defaults.withCredentials = true;
@@ -18,15 +19,14 @@ const UserManagement = () => {
   const [deleteId, setDeleteId] = useState(null);
   const navigate = useNavigate();
 
-  const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5001";
-
   useEffect(() => {
     fetchData();
   }, []);
 
   const fetchData = async () => {
     try {
-      const res = await axios.get(`${API_BASE_URL}/api/users`);
+      // 🌟 Updated Axios call to use your safe cloud proxy function
+      const res = await axios.get(getApiUrl("api/users"));
       setUsers(res.data || []);
     } catch (error) {
       console.error("Error fetching users:", error);
@@ -36,7 +36,8 @@ const UserManagement = () => {
 
   const handleStatusChange = async (userId, newStatus) => {
     try {
-      await axios.put(`${API_BASE_URL}/api/users/${userId}`, { status: newStatus });
+      // 🌟 Updated Axios PUT target with central utility
+      await axios.put(getApiUrl(`api/users/${userId}`), { status: newStatus });
       setUsers(users.map(u => u.userId === userId ? { ...u, status: newStatus } : u));
       toast.success(`User ${newStatus} successfully`);
     } catch (error) {
@@ -46,7 +47,8 @@ const UserManagement = () => {
 
   const deleteUser = async () => {
     try {
-      await axios.delete(`${API_BASE_URL}/api/users/${deleteId}`);
+      // 🌟 Updated Axios DELETE target with central utility
+      await axios.delete(getApiUrl(`api/users/${deleteId}`));
       setUsers((prev) => prev.filter((u) => u.userId !== deleteId));
       setDeleteId(null);
       toast.info("User identity purged");
@@ -168,7 +170,6 @@ const UserManagement = () => {
                         </span>
                       </td>
                       <td className="px-8 py-5 text-right">
-                        {/* ✨ Operations now always visible */}
                         <div className="flex justify-end gap-1 transition-opacity">
                           {status === 'pending' && (
                             <>

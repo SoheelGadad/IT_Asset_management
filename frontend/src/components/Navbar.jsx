@@ -5,6 +5,7 @@ import {
   Users, Settings, Bell, Wrench, UserCircle 
 } from "lucide-react";
 import { toast } from "react-toastify";
+import { getApiUrl } from "../api"; // 🌟 Connected your central API utility file (adjust path if needed)
 
 const Navbar = () => {
   const navigate = useNavigate();
@@ -13,10 +14,27 @@ const Navbar = () => {
   const role = localStorage.getItem("UserRole")?.toLowerCase();
   const userName = localStorage.getItem("UserName") || "User";
 
-  const handleLogout = () => {
-    localStorage.clear();
-    toast.success("Logged out successfully");
-    navigate("/login");
+  const handleLogout = async () => {
+    if (!window.confirm("Are you sure you want to log out?")) return;
+
+    try {
+      // 🌟 Backend Sync: Clear the HttpOnly session cookie safely on Azure
+      await fetch(getApiUrl("api/logout"), {
+        method: 'GET',
+        credentials: 'include' 
+      });
+    } catch (error) {
+      console.error("Network logout sync failed, forcing local cleanup:", error);
+    } finally {
+      // 🧹 Local State Eviction
+      localStorage.clear();
+      
+      // Clear client-side fallback auth cookies if matching
+      document.cookie = "Authtoken=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; SameSite=None; Secure";
+      
+      toast.success("Logged out successfully");
+      navigate("/login");
+    }
   };
 
   const getLinkStyle = (path) => 

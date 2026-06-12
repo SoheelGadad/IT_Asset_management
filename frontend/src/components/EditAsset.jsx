@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'react-toastify';
 import Logout from './Logout';
+import { getApiUrl } from '../api'; // 🌟 Connected your central API utility file (adjust path if needed)
 
 const EditAsset = () => {
     const { id } = useParams();
@@ -40,16 +41,14 @@ const EditAsset = () => {
         notes: '' // 👈 Added this to sync with Technician Dashboard
     });
 
-    const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5001";
-
     useEffect(() => {
         const loadData = async () => {
             try {
                 setLoading(true);
-                // We add a timestamp to the asset fetch to prevent browser caching
+                // 🌟 Updated concurrent data fetching routes to map via your flexible proxy setup
                 const [empRes, assetRes] = await Promise.all([
-                    axios.get(`${API_BASE_URL}/api/users`, { withCredentials: true }),
-                    axios.get(`${API_BASE_URL}/api/assets/${id}?t=${Date.now()}`, { withCredentials: true })
+                    axios.get(getApiUrl('api/users'), { withCredentials: true }),
+                    axios.get(getApiUrl(`api/assets/${id}?t=${Date.now()}`), { withCredentials: true })
                 ]);
 
                 const approvedEmps = empRes.data.filter(u => u.status === 'approved');
@@ -62,7 +61,6 @@ const EditAsset = () => {
 
                 setAssetData({
                     ...rawData,
-                    // Ensuring we map 'name' from DB to 'assetName' for the UI
                     assetName: rawData.name || rawData.assetName || '',
                     purchaseDate: formattedDate,
                     assignedUser: rawData.assignedUser || 'Unassigned',
@@ -77,7 +75,7 @@ const EditAsset = () => {
             }
         };
         loadData();
-    }, [id, API_BASE_URL, navigate]);
+    }, [id, navigate]); // 🌟 Cleaned up API_BASE_URL from tracking parameters
 
     const handleInputChange = (event) => {
         const { name, value } = event.target;
@@ -87,15 +85,14 @@ const EditAsset = () => {
     const handleSubmit = async (event) => {
         event.preventDefault();
         try {
-            // Automation: If a user is assigned, ensure status is Active
             const payload = {
                 ...assetData,
-                // Ensure the backend receives 'name' as expected by your Asset model
                 name: assetData.assetName, 
                 status: assetData.assignedUser !== 'Unassigned' ? 'Active' : assetData.status
             };
 
-            await axios.put(`${API_BASE_URL}/api/assets/${id}`, payload, { withCredentials: true });
+            // 🌟 Updated state synchronization endpoint to wrap inside getApiUrl
+            await axios.put(getApiUrl(`api/assets/${id}`), payload, { withCredentials: true });
             toast.success('Asset configuration updated and synced');
             navigate('/asset-inventory');
         } catch (error) {
@@ -207,7 +204,6 @@ const EditAsset = () => {
                                 </select>
                             </div>
 
-                            {/* 📝 NEW: MAINTENANCE REMARKS FIELD */}
                             <div className="md:col-span-2 space-y-1">
                                 <label className="text-[10px] font-black text-amber-600 uppercase tracking-widest ml-1 flex items-center gap-2">
                                     <MessageSquare size={14} /> Technician Remarks (Visible to User)

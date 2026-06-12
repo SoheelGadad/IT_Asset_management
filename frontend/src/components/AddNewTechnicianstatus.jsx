@@ -4,6 +4,7 @@ import axios from 'axios';
 import { Globe, Package, Calendar, Activity, Save, Tag, Hash, User, ShieldCheck, Loader2, Search, History, MessageSquare, Edit, ArrowLeft } from 'lucide-react';
 import Logout from './Logout';
 import { toast } from 'react-toastify';
+import { getApiUrl } from '../api'; // 🌟 Connected your central API utility file (adjust path if needed)
 
 const AddNewTechnicianstatus = () => {
     const { id } = useParams();
@@ -11,8 +12,6 @@ const AddNewTechnicianstatus = () => {
     const [fetching, setFetching] = useState(false);
     const [manualId, setManualId] = useState("");
     const [recentUpdates, setRecentUpdates] = useState([]);
-
-    const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5001";
 
     const [formData, setFormData] = useState({
         assetId: id && id !== 'search' ? id : '',
@@ -34,7 +33,8 @@ const AddNewTechnicianstatus = () => {
     const fetchDetails = async () => {
         setFetching(true);
         try {
-            const res = await axios.get(`${API_BASE_URL}/api/assets/${id}`, { withCredentials: true });
+            // 🌟 Updated Axios endpoint to use getApiUrl
+            const res = await axios.get(getApiUrl(`api/assets/${id}`), { withCredentials: true });
             setFormData({
                 assetId: res.data.assetId || id,
                 assetName: res.data.assetName || '',
@@ -56,7 +56,8 @@ const AddNewTechnicianstatus = () => {
 
     const fetchRecentUpdates = async () => {
         try {
-            const res = await axios.get(`${API_BASE_URL}/api/assets`, { withCredentials: true });
+            // 🌟 Updated Axios endpoint to use getApiUrl
+            const res = await axios.get(getApiUrl('api/assets'), { withCredentials: true });
             const sorted = Array.isArray(res.data) 
                 ? [...res.data].reverse().slice(0, 5) 
                 : [];
@@ -73,7 +74,8 @@ const AddNewTechnicianstatus = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            await axios.put(`${API_BASE_URL}/api/assets/${id}`, formData, { withCredentials: true });
+            // 🌟 Updated Axios endpoint to use getApiUrl
+            await axios.put(getApiUrl(`api/assets/${id}`), formData, { withCredentials: true });
             toast.success("Maintenance records synchronized!");
             fetchRecentUpdates();
             setTimeout(() => navigate('/admin-dashboard'), 1000);

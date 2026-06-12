@@ -4,6 +4,7 @@ import axios from 'axios';
 import { Globe, Package, Tag, Monitor, Hash, Calendar, ShieldCheck, MapPin, UserPlus, ArrowLeft } from 'lucide-react';
 import { toast } from 'react-toastify';
 import Logout from './Logout';
+import { getApiUrl } from '../api'; // 🌟 Connected your central API utility file (adjust path if needed)
 
 // ✨ AXIOS CREDENTIALS
 axios.defaults.withCredentials = true;
@@ -26,8 +27,6 @@ const AddNewAsset = () => {
         status: 'Active' // ✨ Added default status
     });
 
-    const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5001";
-
     const generateUniqueId = () => {
         const year = new Date().getFullYear();
         const randomNum = Math.floor(1000 + Math.random() * 9000); 
@@ -40,7 +39,8 @@ const AddNewAsset = () => {
 
         const fetchEmployees = async () => {
             try {
-                const response = await axios.get(`${API_BASE_URL}/api/users`);
+                // 🌟 Updated Axios call to pass through your environment wrapper
+                const response = await axios.get(getApiUrl('api/users'));
                 const approvedEmps = response.data.filter(user => user.status === 'approved');
                 setEmployees(approvedEmps);
             } catch (error) {
@@ -49,7 +49,7 @@ const AddNewAsset = () => {
             }
         };
         fetchEmployees();
-    }, [API_BASE_URL]);
+    }, []); // 🌟 Removed API_BASE_URL dependency since it is centralized now
 
     const handleInputChange = (event) => {
         const { name, value } = event.target;
@@ -59,7 +59,8 @@ const AddNewAsset = () => {
     const handleSubmit = async (event) => {
         event.preventDefault();
         try {
-            const response = await fetch(`${API_BASE_URL}/api/assets`, {
+            // 🌟 Updated native Fetch call to use your secure routing environment wrapper
+            const response = await fetch(getApiUrl('api/assets'), {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(assetData)

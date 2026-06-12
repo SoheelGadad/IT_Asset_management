@@ -2,17 +2,18 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { LogOut } from 'lucide-react';
+import { getApiUrl } from '../api'; // 🌟 Connected your central API utility file (adjust path if needed)
 
 const Logout = () => {
     const navigate = useNavigate();
-    const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5001";
 
     const logout = async () => {
         if (!window.confirm("Are you sure you want to terminate your session?")) return;
 
         try {
-            // 1. Backend Sync: Clear the HttpOnly session cookie on Render
-            await fetch(`${API_BASE_URL}/api/logout`, {
+            // 1. Backend Sync: Clear the HttpOnly session cookie safely on your cloud domain
+            // 🌟 Replaced the hardcoded template literal with your secure utility wrapper
+            await fetch(getApiUrl("api/logout"), {
                 method: 'GET',
                 credentials: 'include' 
             });

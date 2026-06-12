@@ -4,6 +4,7 @@ import { Globe, Plus, Edit3, Trash2, User, Package, X, Calendar, ChevronRight, C
 import Logout from "./Logout";
 import { Link } from 'react-router-dom';
 import { toast } from 'react-toastify';
+import { getApiUrl } from '../api'; // 🌟 Connected your central API utility file (adjust path if needed)
 
 // ✨ AXIOS CREDENTIALS
 axios.defaults.withCredentials = true;
@@ -21,14 +22,13 @@ const AssignedAssets = () => {
     const [users, setUsers] = useState([]);
     const [assets, setAssets] = useState([]);
 
-    const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5001";
-
     const fetchAllData = async () => {
         try {
+            // 🌟 Updated concurrent data syncs to process safely via your relative API wrapper
             const [assignRes, userRes, assetRes] = await Promise.all([
-                axios.get(`${API_BASE_URL}/api/assignments`),
-                axios.get(`${API_BASE_URL}/api/users`),
-                axios.get(`${API_BASE_URL}/api/assets`)
+                axios.get(getApiUrl('api/assignments')),
+                axios.get(getApiUrl('api/users')),
+                axios.get(getApiUrl('api/assets'))
             ]);
             setAssignedAssets(assignRes.data);
             setUsers(userRes.data);
@@ -41,7 +41,7 @@ const AssignedAssets = () => {
 
     useEffect(() => {
         fetchAllData();
-    }, [API_BASE_URL]);
+    }, []); // 🌟 Cleaned up global variables from tracking dependencies
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -60,20 +60,22 @@ const AssignedAssets = () => {
 
         try {
             if (editMode) {
-                const res = await axios.put(`${API_BASE_URL}/api/assignments/${currentAssignment._id}`, { userId, assetId, assignmentDate });
+                // 🌟 Updated Axios PUT target
+                const res = await axios.put(getApiUrl(`api/assignments/${currentAssignment._id}`), { userId, assetId, assignmentDate });
                 setAssignedAssets(prev => prev.map(a => a._id === currentAssignment._id ? res.data : a));
                 toast.success("Deployment details updated");
             } else {
-                const res = await axios.post(`${API_BASE_URL}/api/assignments`, { userId, assetId, assignmentDate });
+                // 🌟 Updated Axios POST target
+                const res = await axios.post(getApiUrl('api/assignments'), { userId, assetId, assignmentDate });
                 
-                // 🤖 AUTOMATION STEP: Also update the master asset status to 'Active'
-                await axios.put(`${API_BASE_URL}/api/assets/${assetId}`, { assignedUser: userId, status: 'Active' });
+                // 🤖 AUTOMATION STEP: Updated Axios database patch sync for master state transitions
+                await axios.put(getApiUrl(`api/assets/${assetId}`), { assignedUser: userId, status: 'Active' });
                 
                 setAssignedAssets(prev => [...prev, res.data]);
                 toast.success("Hardware deployed successfully!");
             }
             closeModal();
-            fetchAllData(); // Refresh all data to sync status
+            fetchAllData(); 
         } catch (error) {
             console.error("Submission failed:", error);
             toast.error("Cloud deployment failed");
@@ -101,10 +103,11 @@ const AssignedAssets = () => {
     const handleDelete = async (id, currentAssetId) => {
         if (!window.confirm("Terminate this assignment? Hardware will return to warehouse.")) return;
         try {
-            await axios.delete(`${API_BASE_URL}/api/assignments/${id}`);
+            // 🌟 Updated Axios actions to use central dynamic relative wrapper
+            await axios.delete(getApiUrl(`api/assignments/${id}`));
             
-            // 🤖 AUTOMATION: Set asset back to Unassigned
-            await axios.put(`${API_BASE_URL}/api/assets/${currentAssetId}`, { assignedUser: 'Unassigned' });
+            // 🤖 AUTOMATION: Set asset back to Unassigned via unified dynamic proxy
+            await axios.put(getApiUrl(`api/assets/${currentAssetId}`), { assignedUser: 'Unassigned' });
             
             setAssignedAssets(prev => prev.filter(a => a._id !== id));
             toast.info("Hardware recovered to stock");

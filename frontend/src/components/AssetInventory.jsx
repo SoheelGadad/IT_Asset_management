@@ -13,10 +13,11 @@ import {
     MapPin, 
     UserCheck,
     Download,
-    Wrench, // 👈 Added for Maintenance shortcut
+    Wrench, 
     ExternalLink
 } from 'lucide-react';
 import Logout from './Logout';
+import { getApiUrl } from '../api'; // 🌟 Connected your central API utility file (adjust path if needed)
 
 // ✨ AXIOS CREDENTIALS
 axios.defaults.withCredentials = true;
@@ -26,8 +27,6 @@ const AssetInventory = () => {
     const [searchQuery, setSearchQuery] = useState('');
     const [filteredAssets, setFilteredAssets] = useState([]);
     const navigate = useNavigate();
-
-    const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5001";
 
     useEffect(() => {
         fetchData();
@@ -52,7 +51,8 @@ const AssetInventory = () => {
 
     const fetchData = async () => {
         try {
-            const response = await axios.get(`${API_BASE_URL}/api/assets`);
+            // 🌟 Updated Axios fetch operation to leverage your global routing variable
+            const response = await axios.get(getApiUrl('api/assets'));
             setAssets(response.data);
             setFilteredAssets(response.data); 
         } catch (error) {
@@ -91,7 +91,8 @@ const AssetInventory = () => {
     const handleDeleteAsset = async (assetId) => {
         if (window.confirm('Are you sure you want to delete this asset?')) {
             try {
-                await axios.delete(`${API_BASE_URL}/api/assets/${assetId}`);
+                // 🌟 Updated Axios delete method invocation to safely process through dynamic relative cloud configurations
+                await axios.delete(getApiUrl(`api/assets/${assetId}`));
                 setAssets(assets.filter(asset => asset.assetId !== assetId));
                 alert('Asset deleted successfully!');
             } catch (error) {
@@ -143,7 +144,7 @@ const AssetInventory = () => {
 
                     <div className="overflow-x-auto">
                         <table className="w-full text-left">
-                            <thead className="bg-gray-50/50 border-b border-gray-100 text-gray-400 text-[10px] font-black uppercase tracking-widest">
+                            <thead className="bg-gray-50/50 border-b border-gray-100 text-gray-400 text-[10px] font-black uppercase tracking-widest"/>
                                 <tr>
                                     <th className="px-6 py-4">Asset Details</th>
                                     <th className="px-6 py-4">Type/Model</th>
@@ -152,88 +153,12 @@ const AssetInventory = () => {
                                     <th className="px-6 py-4">Current Holder</th>
                                     <th className="px-6 py-4 text-right">Operations</th>
                                 </tr>
-                            </thead>
-                            <tbody className="divide-y divide-gray-50 text-sm">
-                                {filteredAssets.map(asset => (
-                                    <tr key={asset.assetId} className="hover:bg-blue-50/30 transition-colors group">
-                                        <td className="px-6 py-5">
-                                            <div className="font-bold text-gray-900">{asset.assetName}</div>
-                                            <div className="text-[10px] font-mono font-bold text-gray-400 uppercase">{asset.assetId}</div>
-                                        </td>
-                                        <td className="px-6 py-5">
-                                            <div className="flex items-center gap-2 font-bold text-gray-700">
-                                                <Monitor size={14} className="text-blue-500" /> {asset.assetType}
-                                            </div>
-                                            <div className="text-xs text-gray-500">{asset.model}</div>
-                                        </td>
-                                        <td className="px-6 py-5">
-                                            <div className="flex items-center gap-2 text-xs font-mono font-bold text-gray-400">
-                                                <Hash size={12} /> {asset.serialNumber}
-                                            </div>
-                                            <div className="text-[10px] flex items-center gap-1 text-rose-500 mt-1 uppercase font-black"><MapPin size={10}/> {asset.location}</div>
-                                        </td>
-                                        <td className="px-6 py-5">
-                                            <div className="text-xs font-bold text-gray-700">
-                                                Purchased: {new Date(asset.purchaseDate).toLocaleDateString()}
-                                            </div>
-                                            <div className="text-[10px] font-black text-emerald-600 uppercase mt-1">
-                                                {asset.warranty} Coverage
-                                            </div>
-                                        </td>
-                                        <td className="px-6 py-5">
-                                            <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider border ${
-                                                !asset.assignedUser || asset.assignedUser === 'Unassigned' 
-                                                ? 'bg-amber-50 text-amber-600 border-amber-100 italic' 
-                                                : 'bg-blue-50 text-blue-600 border-blue-100'
-                                            }`}>
-                                                <UserCheck size={12} />
-                                                {asset.assignedUser || 'Available for Claim'}
-                                            </div>
-                                        </td>
-                                        <td className="px-6 py-5 text-right">
-                                            <div className="flex justify-end gap-1">
-                                                {/* 🛠️ Maintenance Shortcut */}
-                                                <button 
-                                                    onClick={() => navigate(`/add-new-technician-status/${asset.assetId}`)}
-                                                    className="p-2.5 text-amber-600 hover:bg-amber-50 rounded-xl transition"
-                                                    title="Update Maintenance"
-                                                >
-                                                    <Wrench size={18} />
-                                                </button>
-                                                {/* Edit */}
-                                                <button 
-                                                    onClick={() => navigate(`/edit-asset/${asset.assetId}`)}
-                                                    className="p-2.5 text-blue-600 hover:bg-blue-50 rounded-xl transition"
-                                                    title="Edit Configuration"
-                                                >
-                                                    <Edit3 size={18} />
-                                                </button>
-                                                {/* Delete */}
-                                                <button 
-                                                    onClick={() => handleDeleteAsset(asset.assetId)}
-                                                    className="p-2.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition"
-                                                    title="Remove Asset"
-                                                >
-                                                    <Trash2 size={18} />
-                                                </button>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
-
-                    {filteredAssets.length === 0 && (
-                        <div className="py-24 text-center">
-                            <Package className="mx-auto text-gray-100 mb-4" size={100} />
-                            <p className="text-gray-400 font-bold uppercase text-xs tracking-[0.2em]">Inventory empty or no matches found</p>
+                            </table>
                         </div>
-                    )}
-                </div>
-            </main>
-        </div>
-    );
-};
+                    </div>
+                </main>
+            </div>
+        );
+    };
 
 export default AssetInventory;

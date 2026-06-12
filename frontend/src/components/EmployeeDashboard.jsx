@@ -1,9 +1,10 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { LayoutDashboard, Package, User, Calendar, ExternalLink, Plus, Save, X, Settings, Info } from 'lucide-react';
 import { toast } from 'react-toastify';
 import axios from 'axios';
 import ClaimAsset from '../components/ClaimAsset';
+import { getApiUrl } from '../api'; // 🌟 Connected your central API utility file (adjust path if needed)
 
 const EmployeeDashboard = () => {
     const [assignedAssets, setAssignedAssets] = useState([]);
@@ -18,21 +19,22 @@ const EmployeeDashboard = () => {
     const [editData, setEditData] = useState({ username: "", email: "" });
 
     const navigate = useNavigate();
-    const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5001";
 
     const fetchDashboardData = async () => {
         try {
             setLoading(true);
-            const profileRes = await fetch(`${API_BASE_URL}/api/getEmployees`, { credentials: 'include' });
+            // 🌟 Updated raw fetch requests to securely process through your global wrapper
+            const profileRes = await fetch(getApiUrl('api/getEmployees'), { credentials: 'include' });
             if (!profileRes.ok) throw new Error('Auth failed');
             const empData = await profileRes.json();
             setEmployee(empData);
             setEditData({ username: empData.username, email: empData.email });
 
+            // 🌟 Converted Promise.all paths to map dynamically to your relative environment locations
             const [assignRes, masterRes, requestsRes] = await Promise.all([
-                fetch(`${API_BASE_URL}/api/assigned-assets/employee/${empData.userId}`, { credentials: 'include' }),
-                fetch(`${API_BASE_URL}/api/assets`, { credentials: 'include' }),
-                fetch(`${API_BASE_URL}/api/requests/pending`, { credentials: 'include' }) 
+                fetch(getApiUrl(`api/assigned-assets/employee/${empData.userId}`), { credentials: 'include' }),
+                fetch(getApiUrl('api/assets'), { credentials: 'include' }),
+                fetch(getApiUrl('api/requests/pending'), { credentials: 'include' }) 
             ]);
 
             const assignedData = await assignRes.json();
@@ -55,7 +57,8 @@ const EmployeeDashboard = () => {
     const handleUpdateProfile = async (e) => {
         e.preventDefault();
         try {
-            await axios.put(`${API_BASE_URL}/api/users/${employee.userId}`, editData);
+            // 🌟 Swapped the hardcoded string out for your unified utility wrapper
+            await axios.put(getApiUrl(`api/users/${employee.userId}`), editData);
             setEmployee({ ...employee, ...editData });
             localStorage.setItem("UserName", editData.username); 
             setIsEditingProfile(false);

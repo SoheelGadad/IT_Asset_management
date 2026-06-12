@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom'; // 👈 Added useNavigate
+import { Link, useNavigate } from 'react-router-dom'; 
 import axios from 'axios';
 import { 
   Globe, 
@@ -14,9 +14,10 @@ import {
   Clock,
   Eye,
   LayoutDashboard,
-  AlertCircle // 👈 Added for notifications
+  AlertCircle 
 } from 'lucide-react';
 import Logout from './Logout';
+import { getApiUrl } from '../api'; // 🌟 Connected your central API utility file (adjust path if needed)
 
 // ✨ AXIOS CREDENTIALS
 axios.defaults.withCredentials = true;
@@ -24,7 +25,7 @@ axios.defaults.withCredentials = true;
 const AdminDashboard = () => {
     const [totalAssets, setTotalAssets] = useState(0);
     const [totalUsers, setTotalUsers] = useState(0);
-    const [pendingRequests, setPendingRequests] = useState(0); // 👈 New state for claims
+    const [pendingRequests, setPendingRequests] = useState(0); 
     const [loading, setLoading] = useState(true);
     const navigate = useNavigate();
 
@@ -33,16 +34,14 @@ const AdminDashboard = () => {
     const [showTrackingMenu, setShowTrackingMenu] = useState(false);
     const [showUserMenu, setShowUserMenu] = useState(false);
 
-    const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5001";
-
     useEffect(() => {
         const fetchDashboardData = async () => {
             try {
-                // 🔄 Added fetch for pending requests
+                // 🌟 Updated all concurrent Axios operations to use your secure routing environment wrapper
                 const [assetRes, userRes, requestRes] = await Promise.all([
-                    axios.get(`${API_BASE_URL}/api/assets`),
-                    axios.get(`${API_BASE_URL}/api/users`),
-                    axios.get(`${API_BASE_URL}/api/requests/pending`)
+                    axios.get(getApiUrl('api/assets')),
+                    axios.get(getApiUrl('api/users')),
+                    axios.get(getApiUrl('api/requests/pending'))
                 ]);
                 
                 setTotalAssets(Array.isArray(assetRes.data) ? assetRes.data.length : 0);
@@ -55,7 +54,7 @@ const AdminDashboard = () => {
             }
         };
         fetchDashboardData();
-    }, [API_BASE_URL]);
+    }, []); // 🌟 Cleaned up reference dependency array
 
     return (
         <div className="min-h-screen bg-slate-50 flex flex-col font-sans text-gray-900">
@@ -67,7 +66,7 @@ const AdminDashboard = () => {
                     <p className="text-gray-500 font-medium mt-1">Full control over organization hardware and user permissions.</p>
                 </header>
 
-                {/* 🔔 NEW: Pending Requests Notification Bar */}
+                {/* 🔔 Pending Requests Notification Bar */}
                 {pendingRequests > 0 && (
                     <div 
                         onClick={() => navigate('/manage-requests')}
