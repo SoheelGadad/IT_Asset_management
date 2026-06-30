@@ -7,6 +7,7 @@ This project was developed and submitted in partial fulfillment of the requireme
 ## 🌐 Live Application Link
 
 * **Production Deployment:** [https://assetmanagementsystem-hkdfe0dzd9gchkbj.centralindia-01.azurewebsites.net/](https://assetmanagementsystem-hkdfe0dzd9gchkbj.centralindia-01.azurewebsites.net/)
+* * **Qollabb Certificate:** [https://drive.google.com/file/d/1GV2QMDpHDojgm8ZbDxta0hWxxrO28Lid/view?usp=drive_link/](https://drive.google.com/file/d/1GV2QMDpHDojgm8ZbDxta0hWxxrO28Lid/view?usp=drive_link) 
 
 ---
 
